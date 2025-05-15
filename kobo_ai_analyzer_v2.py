@@ -11,12 +11,12 @@ import plotly.express as px
 
 # Streamlit App Config
 st.set_page_config("KoboToolbox AI Analyzer", layout="wide")
-st.title("📊 KoboToolbox + AI Data Analysis")
+st.title("📊 KoboToolbox (https://eu.kobotoolbox.org) + AI Data Analysis")
 
 # Sidebar: Credentials
 kobo_username = st.sidebar.text_input("🔐 Kobo Username")
 kobo_password = st.sidebar.text_input("🔑 Kobo Password", type="password")
-openai.api_key = st.sidebar.text_input("🧠 OpenAI API Key", type="password")
+openai.api_key = st.sidebar.text_input("🧠 OpenAI API Key (Optional)", type="password")
 base_url = "https://eu.kobotoolbox.org"  # or change for another Kobo server
 
 # Utility Functions
