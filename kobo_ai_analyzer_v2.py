@@ -27,17 +27,8 @@ def rename_columns(df, label_map):
 @st.cache_data(show_spinner=False)
 def map_choice_labels(df, choice_columns, choice_map):
     df_copy = df.copy()
-    for col, list_name in choice_columns.items():
-        if list_name == "facility":
-            print(col + ": "+list_name)
-           # print(df_copy.columns)
-                           
+    for col, list_name in choice_columns.items():                    
         if col in df_copy.columns and list_name in choice_map:
-            if list_name == "facility":
-                print("******")
-                print("******")  
-                print("******") 
-                df_copy["facility-i"] = df_copy["facility-i"].map(choice_map)
             df_copy[col] = df_copy[col].map(choice_map[list_name]).fillna(df_copy[col])
        
     return df_copy
@@ -113,10 +104,7 @@ if kobo_username and kobo_password:
                     for list_name in choices_df["list_name"].unique():
                         sub = choices_df[choices_df["list_name"] == list_name]
                         choice_map[list_name] = dict(zip(sub["name"], sub[label_col_name]))
-                        # if list_name == "facility-i":
-                        #     print("*****************************************************")
-                        #     print(choice_map[list_name])
-                        #     print("*****************************************************")
+
             else:
                 st.warning("Could not fetch XLSForm.")
 
