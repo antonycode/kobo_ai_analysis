@@ -10,6 +10,17 @@ import matplotlib.pyplot as plt
 import plotly.express as px
 
 
+hide_streamlit_style = """
+    <style>
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    header {visibility: hidden;}
+    .stActionButton {visibility: hidden;} /* Optional: hides some app buttons */
+    </style>
+"""
+st.markdown(hide_streamlit_style, unsafe_allow_html=True)
+
+
 # Streamlit App Config
 st.set_page_config("KoboToolbox AI Analyzer", layout="wide")
 st.title("📊 KoboToolbox  + AI Data Analysis")
