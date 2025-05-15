@@ -12,7 +12,7 @@ import plotly.express as px
 
 # Streamlit App Config
 st.set_page_config("KoboToolbox AI Analyzer", layout="wide")
-st.title("📊 KoboToolbox (https://eu.kobotoolbox.org) + AI Data Analysis")
+st.title("📊 KoboToolbox  + AI Data Analysis")
 
 # Sidebar: Credentials
 kobo_username = st.sidebar.text_input("🔐 Kobo Username")
