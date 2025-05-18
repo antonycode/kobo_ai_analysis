@@ -10,6 +10,10 @@ import matplotlib.pyplot as plt
 import plotly.express as px
 
 
+# Streamlit App Config
+st.set_page_config("KoboToolbox AI Analyzer", layout="wide")
+st.title("📊 KoboToolbox  + AI Data Analysis")
+
 hide_streamlit_style = """
     <style>
     #MainMenu {visibility: hidden;}
@@ -19,11 +23,6 @@ hide_streamlit_style = """
     </style>
 """
 st.markdown(hide_streamlit_style, unsafe_allow_html=True)
-
-
-# Streamlit App Config
-st.set_page_config("KoboToolbox AI Analyzer", layout="wide")
-st.title("📊 KoboToolbox  + AI Data Analysis")
 
 # Sidebar: Credentials
 kobo_username = st.sidebar.text_input("🔐 Kobo Username")
