@@ -169,6 +169,16 @@ if kobo_username and kobo_password:
 
             cat_cols = df.columns
 
+            st.subheader("🗺️ Location Map (if latitude/longitude available)")
+            lat_cols = [col for col in df.columns if 'lat' in col.lower()]
+            lon_cols = [col for col in df.columns if 'lon' in col.lower()]
+            if lat_cols and lon_cols:
+                lat_col = st.selectbox("Latitude column", lat_cols)
+                lon_col = st.selectbox("Longitude column", lon_cols)
+                st.map(df[[lat_col, lon_col]].rename(columns={lat_col: "lat", lon_col: "lon"}).dropna())
+            else:
+                st.info("No latitude and longitude columns detected.")
+
             st.subheader("📝 Sentiment Analysis & Word Cloud")
             text_cols = df.select_dtypes(include='object').columns.tolist()
             text_col = st.selectbox("Select text column", text_cols)
