@@ -171,15 +171,18 @@ if kobo_username and kobo_password:
 
             st.subheader("🗺️ Location Map (if latitude/longitude available)")
             # Detect GPS fields in single column
-            gps_cols = [col for col in df.columns if df[col].dropna().astype(str).str.match(r'^-?\\d+\\.\\d+\\s+-?\\d+\\.\\d+').any()]
+            gps_cols = [ col for col in df.columns if df[col].dropna().apply(lambda x: len(str(x).split()) == 4).all() ]
 
             if gps_cols:
                 gps_col = st.selectbox("Select GPS field", gps_cols, help="Field containing space-separated lat/lon")
-                df[['lat', 'lon']] = df[gps_col].str.extract(r'^(-?\\d+\\.\\d+)\\s+(-?\\d+\\.\\d+)', expand=True).astype(float)
-                st.map(df[['lat', 'lon']].dropna())
-            else:
-                st.info("No GPS column with space-separated lat/lon found.")
+                #df[['lat', 'lon']] = df[gps_col].dropna().apply( lambda x: pd.Series(str(x).split()[:2]), axis=1).astype(float)
+                df[['lat', 'lon']] = df[gps_col].dropna().apply(lambda x: pd.Series(str(x).split()[:2])).astype(float)
 
+                st.map(df[['lat', 'lon']].dropna())
+
+            else:
+                st.info("No GPS column with space-separated coordinates found.")
+       
             st.subheader("📝 Sentiment Analysis & Word Cloud")
             text_cols = df.select_dtypes(include='object').columns.tolist()
             text_col = st.selectbox("Select text column", text_cols)
