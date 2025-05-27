@@ -160,14 +160,56 @@ if kobo_username and kobo_password:
             else:
                 st.warning("Enter your OpenAI API key to get AI insights.")
 
-            st.subheader("📊 Auto Visualizations")
             num_cols = df.columns
             if len(num_cols):
-                col = st.selectbox("Select numeric column", num_cols, key="num_col")
-                fig = px.histogram(df, x=col, nbins=30, title=f"Distribution of {col}")
-                st.plotly_chart(fig)
+                all_cols = df.columns.tolist()
 
-            cat_cols = df.columns
+                st.subheader("📈 Custom Chart Builder")
+
+                all_cols = df.columns.tolist()
+
+                st.subheader("📈 Custom Chart Builder")
+
+                # Chart type selection
+                chart_type = st.selectbox("📊 Select chart type", ["Scatter", "Line", "Bar", "Pie"])
+
+                # Shared inputs for title and axis labels
+                custom_title = st.text_input("📌 Chart Title", value="My Chart")
+                selected_color = st.color_picker("🎨 Pick chart color", value="#1f77b4")  # default Plotly blue
+
+                if chart_type in ["Scatter", "Line", "Bar"]:
+                    x_col = st.selectbox("🧭 X-axis", all_cols)
+                    y_col = st.selectbox("📏 Y-axis", [col for col in all_cols if col != x_col])
+
+                    custom_x_label = st.text_input("🖋 X-axis Label", value=x_col)
+                    custom_y_label = st.text_input("🖋 Y-axis Label", value=y_col)
+
+                    if chart_type == "Scatter":
+                        fig = px.scatter(df, x=x_col, y=y_col)
+                        fig.update_traces(marker=dict(color=selected_color))
+                    elif chart_type == "Line":
+                        fig = px.line(df, x=x_col, y=y_col)
+                        fig.update_traces(line=dict(color=selected_color))
+                    elif chart_type == "Bar":
+                        fig = px.bar(df, x=x_col, y=y_col)
+                        fig.update_traces(marker_color=selected_color)
+
+                    # Apply custom titles and labels
+                    fig.update_layout(
+                        title=custom_title,
+                        xaxis_title=custom_x_label,
+                        yaxis_title=custom_y_label
+                    )
+                    st.plotly_chart(fig, use_container_width=True)
+
+                # Pie chart
+                elif chart_type == "Pie":
+                    pie_label = st.selectbox("🧩 Pie slices (labels)", all_cols)
+                    pie_value = st.selectbox("🔢 Pie values", all_cols)
+                    custom_pie_title = st.text_input("📌 Pie Chart Title", value=f"{pie_value} by {pie_label}")
+                    fig = px.pie(df, names=pie_label, values=pie_value, color_discrete_sequence=[selected_color])
+                    fig.update_layout(title=custom_pie_title)
+                    st.plotly_chart(fig, use_container_width=True)
 
             st.subheader("🗺️ Location Map (if latitude/longitude available)")
             # Detect GPS fields in single column
@@ -197,7 +239,7 @@ if kobo_username and kobo_password:
                 texts = df[text_col].dropna().astype(str).tolist()
 
                 wc = WordCloud(width=800, height=400, background_color='white').generate(' '.join(texts))
-                st.image(wc.to_array(), caption="Word Cloud", use_column_width=True)
+                st.image(wc.to_array(), caption="Word Cloud", use_container_width=True)
 
                 if openai.api_key:
                     prompt = f"Analyze the overall sentiment of the following responses:\n{texts[:1000]}\n\nGive a summary of tone, main themes, and emotion."
