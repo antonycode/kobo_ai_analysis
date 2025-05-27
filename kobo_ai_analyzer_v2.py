@@ -206,11 +206,27 @@ if kobo_username and kobo_password:
 
                 # Pie chart
                 elif chart_type == "Pie":
-                    pie_label = st.selectbox("🧩 Pie slices (labels)", all_cols)
-                    pie_value = st.selectbox("🔢 Pie values", all_cols)
-                    custom_pie_title = st.text_input("📌 Pie Chart Title", value=f"{pie_value} by {pie_label}")
-                    fig = px.pie(df, names=pie_label, values=pie_value, color_discrete_sequence=[selected_color])
-                    fig.update_layout(title=custom_pie_title)
+                    use_count = st.checkbox("🔢 Use count of each unique value (no need for numeric values)")
+
+                    if use_count:
+                        pie_label = st.selectbox("🧩 Pie slices (labels)", all_cols)
+                        custom_pie_title = st.text_input("📌 Pie Chart Title", value=f"Count of {pie_label}")
+                        
+                        # Count unique values
+                        pie_data = df[pie_label].value_counts().reset_index()
+                        pie_data.columns = [pie_label, "Count"]
+
+                        fig = px.pie(pie_data, names=pie_label, values="Count", color_discrete_sequence=[selected_color])
+                        fig.update_layout(title=custom_pie_title)
+
+                    else:
+                        pie_label = st.selectbox("🧩 Pie slices (labels)", all_cols)
+                        pie_value = st.selectbox("🔢 Pie values", all_cols)
+                        custom_pie_title = st.text_input("📌 Pie Chart Title", value=f"{pie_value} by {pie_label}")
+                        
+                        fig = px.pie(df, names=pie_label, values=pie_value, color_discrete_sequence=[selected_color])
+                        fig.update_layout(title=custom_pie_title)
+
                     st.plotly_chart(fig, use_container_width=True)
 
             st.subheader("🗺️ Location Map (if latitude/longitude available)")
