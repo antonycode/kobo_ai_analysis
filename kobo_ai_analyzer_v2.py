@@ -25,10 +25,11 @@ hide_streamlit_style = """
 st.markdown(hide_streamlit_style, unsafe_allow_html=True)
 
 # Sidebar: Credentials
+base_url = st.sidebar.text_input("🗺️ Kobo server URL", placeholder="eg https://eu.kobotoolbox.org or https://kf.kobotoolbox.org")
 kobo_username = st.sidebar.text_input("🔐 Kobo Username")
 kobo_password = st.sidebar.text_input("🔑 Kobo Password", type="password")
 openai.api_key = st.sidebar.text_input("🧠 OpenAI API Key (Optional)", type="password")
-base_url = "https://eu.kobotoolbox.org"  # or change for another Kobo server
+#base_url = "https://eu.kobotoolbox.org"  # or change for another Kobo server
 
 # Utility Functions
 @st.cache_data(show_spinner=False)
