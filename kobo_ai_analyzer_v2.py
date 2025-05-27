@@ -163,11 +163,6 @@ if kobo_username and kobo_password:
             num_cols = df.columns
             if len(num_cols):
                 all_cols = df.columns.tolist()
-
-                st.subheader("📈 Custom Chart Builder")
-
-                all_cols = df.columns.tolist()
-
                 st.subheader("📈 Custom Chart Builder")
 
                 # Chart type selection
