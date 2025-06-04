@@ -34,6 +34,11 @@ st.sidebar.header("📥 Data Source")
 
 data_source = st.sidebar.selectbox("Select Data Source", ["Excel", "CSV","KoboToolbox", "ODK", "DHIS2"])
 
+import plotly.express as px
+#dof = px.data.tips()
+# dof = px.data.tips()
+# st.dataframe(dof.head())
+
 
 # global dataframe to hold the selected data
 df = None  
@@ -347,8 +352,7 @@ if kobo_username and kobo_password:
 
                 st.session_state.df = df
                 st.session_state.analyze_clicked = False
-                st.success(f"{len(df)} responses loaded and decoded.")
-                st.dataframe(df.head())
+                
 
     else:
         st.error("No forms found. Check your Kobo account.")
@@ -362,35 +366,41 @@ if "df" in st.session_state:
 
     # Download responses
     if not df.empty:
-        st.subheader("📥 Download Responses")
+        with st.expander("Loaded Data"):
+            st.success(f"{len(df)} responses loaded and decoded.")
+            st.dataframe(df.head())
 
-        # Choose format
-        download_format = st.radio("Choose download format:", ("CSV", "Excel (.xlsx)"))
+        with st.expander("📥 Download Responses"):
+        # st.subheader()
 
-        # Generate download link based on selection
-        if download_format == "CSV":
-            csv = df.to_csv(index=False).encode("utf-8")
-            st.download_button(
-                label="⬇️ Download CSV",
-                data=csv,
-                file_name="responses.csv",
-                mime="text/csv"
-            )
+            # Choose format
+            download_format = st.radio("Choose download format:", ("CSV", "Excel (.xlsx)"))
 
-        elif download_format == "Excel (.xlsx)":
-            output = BytesIO()
-            with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
-                df.to_excel(writer, index=False, sheet_name="Responses")
-            output.seek(0)
-            st.download_button(
-                label="⬇️ Download Excel",
-                data=output,
-                file_name="responses.xlsx",
-                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-            )
+            # Generate download link based on selection
+            if download_format == "CSV":
+                csv = df.to_csv(index=False).encode("utf-8")
+                st.download_button(
+                    label="⬇️ Download CSV",
+                    data=csv,
+                    file_name="responses.csv",
+                    mime="text/csv"
+                )
 
-    st.subheader("📈 Descriptive Stats")
-    st.dataframe(df.describe(include='all'))
+            elif download_format == "Excel (.xlsx)":
+                output = BytesIO()
+                with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
+                    df.to_excel(writer, index=False, sheet_name="Responses")
+                output.seek(0)
+                st.download_button(
+                    label="⬇️ Download Excel",
+                    data=output,
+                    file_name="responses.xlsx",
+                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                )
+
+    with st.expander("📈 Descriptive Stats"):
+    #st.subheader()
+        st.dataframe(df.describe(include='all'))
 
     if openai.api_key:
         with st.spinner("🔍 Generating AI Insights..."):
@@ -410,139 +420,225 @@ if "df" in st.session_state:
     
     if len(num_cols):
         all_cols = df.columns.tolist()
-        st.subheader("📈 Custom Chart Builder")
+        with st.expander("📈 Custom Chart Builder"):
+            #st.subheader()
 
-        # Chart type selection
-        chart_type = st.selectbox("📊 Select chart type", ["Scatter", "Line", "Bar", "Pie"])
+            # Chart type selection
+            chart_type = st.selectbox("📊 Select chart type", ["Scatter", "Line", "Bar", "Pie"])
 
-        # Shared inputs for title and axis labels
-        custom_title = st.text_input("📌 Chart Title", value="My Chart")
-        selected_color = st.color_picker("🎨 Pick chart color", value="#1f77b4")  # default Plotly blue
+            # Shared inputs for title and axis labels
+            custom_title = st.text_input("📌 Chart Title", value="My Chart")
+            selected_color = st.color_picker("🎨 Pick chart color", value="#1f77b4")  # default Plotly blue
 
-        use_secondary = st.checkbox("➕ Add secondary Y-axis")
-        
+            use_secondary = st.checkbox("➕ Add secondary Y-axis")
+            
 
-        # Create figure with secondary y-axis if selected
-        fig = make_subplots(specs=[[{"secondary_y": use_secondary}]])
+            # Create figure with secondary y-axis if selected
+            fig = make_subplots(specs=[[{"secondary_y": use_secondary}]])
 
-        if chart_type in ["Scatter", "Line", "Bar"]:
+            if chart_type in ["Scatter", "Line", "Bar"]:
 
-            x_col = st.selectbox("🧭 X-axis", all_cols)
-            y_col = st.selectbox("📏 Y-axis", [col for col in all_cols if col != x_col])
+                x_col = st.selectbox("🧭 X-axis", all_cols)
+                y_col = st.selectbox("📏 Y-axis", [col for col in all_cols if col != x_col])
 
-            custom_x_label = st.text_input("🖋 X-axis Label", value=x_col)
-            custom_y_label = st.text_input("🖋 Y-axis Label", value=y_col)
+                custom_x_label = st.text_input("🖋 X-axis Label", value=x_col)
+                custom_y_label = st.text_input("🖋 Y-axis Label", value=y_col)
 
-            if use_secondary:
-                y2_col = st.selectbox("📐 Secondary Y-axis", [col for col in all_cols if col not in [x_col, y_col]])
-                custom_y2_label = st.text_input("🖋 Secondary Y-axis Label", value=y2_col)
-                selected_color2 = st.color_picker("🎨 Secondary Y-axis Color", value="#ff7f0e")
-
-            if chart_type == "Scatter":
-                fig = px.scatter(df, x=x_col, y=y_col)
-                fig.update_traces(marker=dict(color=selected_color))
-            elif chart_type == "Line":
-                # Add secondary trace
                 if use_secondary:
-                    fig.add_trace(
-                        go.Scatter(x=df[x_col], y=df[y2_col], name=y2_col, line=dict(color=selected_color2)),
-                        secondary_y=True
-                    )      
-                else:
-                    fig.add_trace(
-                        go.Scatter(x=df[x_col], y=df[y_col], name=y_col, line=dict(color=selected_color)),
-                        secondary_y=False
-                    )
-            elif chart_type == "Bar":
-                if use_secondary:
-                    fig.add_trace(
-                            go.Bar(x=df[x_col], y=df[y2_col], name=y2_col, marker_color=selected_color2),
+                    y2_col = st.selectbox("📐 Secondary Y-axis", [col for col in all_cols if col not in [x_col, y_col]])
+                    custom_y2_label = st.text_input("🖋 Secondary Y-axis Label", value=y2_col)
+                    selected_color2 = st.color_picker("🎨 Secondary Y-axis Color", value="#ff7f0e")
+
+                if chart_type == "Scatter":
+                    fig = px.scatter(df, x=x_col, y=y_col)
+                    fig.update_traces(marker=dict(color=selected_color))
+                elif chart_type == "Line":
+                    # Add secondary trace
+                    if use_secondary:
+                        fig.add_trace(
+                            go.Scatter(x=df[x_col], y=df[y2_col], name=y2_col, line=dict(color=selected_color2)),
                             secondary_y=True
+                        )      
+                    else:
+                        fig.add_trace(
+                            go.Scatter(x=df[x_col], y=df[y_col], name=y_col, line=dict(color=selected_color)),
+                            secondary_y=False
                         )
+                elif chart_type == "Bar":
+                    if use_secondary:
+                        fig.add_trace(
+                                go.Bar(x=df[x_col], y=df[y2_col], name=y2_col, marker_color=selected_color2),
+                                secondary_y=True
+                            )
+                    else:
+                        fig.add_trace(
+                            go.Bar(x=df[x_col], y=df[y_col], name=y_col, marker_color=selected_color),
+                            secondary_y=False
+                        )
+
+                # Apply custom titles and labels
+                # Layout settings
+                fig.update_layout(
+                    title_text=custom_title,
+                    legend_title="Legend",
+                    xaxis_title=custom_x_label
+                )
+                fig.update_yaxes(title_text=custom_y_label, secondary_y=False)
+                if use_secondary:
+                    fig.update_yaxes(title_text=custom_y2_label, secondary_y=True)
+
+                st.plotly_chart(fig, use_container_width=True)
+
+            # Pie chart
+            elif chart_type == "Pie":
+                use_count = st.checkbox("🔢 Use count of each unique value (no need for numeric values)")
+
+                if use_count:
+                    pie_label = st.selectbox("🧩 Pie slices (labels)", all_cols)
+                    custom_pie_title = st.text_input("📌 Pie Chart Title", value=f"Count of {pie_label}")
+                    
+                    # Count unique values
+                    pie_data = df[pie_label].value_counts().reset_index()
+                    pie_data.columns = [pie_label, "Count"]
+
+                    fig = px.pie(pie_data, names=pie_label, values="Count", color_discrete_sequence=[selected_color])
+                    fig.update_layout(title=custom_pie_title)
+
                 else:
-                    fig.add_trace(
-                        go.Bar(x=df[x_col], y=df[y_col], name=y_col, marker_color=selected_color),
-                        secondary_y=False
-                    )
+                    pie_label = st.selectbox("🧩 Pie slices (labels)", all_cols)
+                    pie_value = st.selectbox("🔢 Pie values", all_cols)
+                    custom_pie_title = st.text_input("📌 Pie Chart Title", value=f"{pie_value} by {pie_label}")
+                    
+                    fig = px.pie(df, names=pie_label, values=pie_value, color_discrete_sequence=[selected_color])
+                    fig.update_layout(title=custom_pie_title)
 
-            # Apply custom titles and labels
-            # Layout settings
-            fig.update_layout(
-                title_text=custom_title,
-                legend_title="Legend",
-                xaxis_title=custom_x_label
-            )
-            fig.update_yaxes(title_text=custom_y_label, secondary_y=False)
-            if use_secondary:
-                fig.update_yaxes(title_text=custom_y2_label, secondary_y=True)
+                st.plotly_chart(fig, use_container_width=True)
 
-            st.plotly_chart(fig, use_container_width=True)
+    with st.expander("🗺️ Location Map (if latitude/longitude available)"):
+        # Detect GPS fields in single column
+        gps_cols = [ col for col in df.columns if df[col].dropna().apply(lambda x: len(str(x).split()) == 4).all() ]
 
-        # Pie chart
-        elif chart_type == "Pie":
-            use_count = st.checkbox("🔢 Use count of each unique value (no need for numeric values)")
+        if gps_cols:
+            gps_col = st.selectbox("Select GPS field", gps_cols, help="Field containing space-separated lat/lon")
+            #df[['lat', 'lon']] = df[gps_col].dropna().apply( lambda x: pd.Series(str(x).split()[:2]), axis=1).astype(float)
+            df[['lat', 'lon']] = df[gps_col].dropna().apply(lambda x: pd.Series(str(x).split()[:2])).astype(float)
 
-            if use_count:
-                pie_label = st.selectbox("🧩 Pie slices (labels)", all_cols)
-                custom_pie_title = st.text_input("📌 Pie Chart Title", value=f"Count of {pie_label}")
-                
-                # Count unique values
-                pie_data = df[pie_label].value_counts().reset_index()
-                pie_data.columns = [pie_label, "Count"]
+            st.map(df[['lat', 'lon']].dropna())
 
-                fig = px.pie(pie_data, names=pie_label, values="Count", color_discrete_sequence=[selected_color])
-                fig.update_layout(title=custom_pie_title)
+        else:
+            st.info("No GPS column with space-separated coordinates found.")
 
-            else:
-                pie_label = st.selectbox("🧩 Pie slices (labels)", all_cols)
-                pie_value = st.selectbox("🔢 Pie values", all_cols)
-                custom_pie_title = st.text_input("📌 Pie Chart Title", value=f"{pie_value} by {pie_label}")
-                
-                fig = px.pie(df, names=pie_label, values=pie_value, color_discrete_sequence=[selected_color])
-                fig.update_layout(title=custom_pie_title)
 
-            st.plotly_chart(fig, use_container_width=True)
+#-----Advanced Charts -------
+    with st.expander("📊 Advanced Chart Builder"):
+        chart_type = st.selectbox("📊 Select Chart Type", [
+            "Sunburst Chart", "Icicle Chart", "Sankey Diagram", "Parcoords",
+            "Ternary Plot", "Violin Plot", "Contour Plot (2D)",
+            "Clustered Heatmap", "Animated Time Series", "Radar / Polar Chart"
+        ])
 
-    st.subheader("🗺️ Location Map (if latitude/longitude available)")
-    # Detect GPS fields in single column
-    gps_cols = [ col for col in df.columns if df[col].dropna().apply(lambda x: len(str(x).split()) == 4).all() ]
+        if chart_type == "Sunburst Chart":
+            path = st.multiselect("🔗 Sunburst Hierarchy", df.columns.tolist(), default=df.columns[:2].tolist())
+            values = st.selectbox("🔢 Values", df.columns.tolist())
+            fig = px.sunburst(df, path=path, values=values)
 
-    if gps_cols:
-        gps_col = st.selectbox("Select GPS field", gps_cols, help="Field containing space-separated lat/lon")
-        #df[['lat', 'lon']] = df[gps_col].dropna().apply( lambda x: pd.Series(str(x).split()[:2]), axis=1).astype(float)
-        df[['lat', 'lon']] = df[gps_col].dropna().apply(lambda x: pd.Series(str(x).split()[:2])).astype(float)
+        elif chart_type == "Icicle Chart":
+            path = st.multiselect("🔗 Icicle Hierarchy", df.columns.tolist(), default=df.columns[:2].tolist())
+            values = st.selectbox("🔢 Values", df.columns.tolist())
+            fig = px.icicle(df, path=path, values=values)
+            fig.update_traces(root_color="gold")
 
-        st.map(df[['lat', 'lon']].dropna())
+        elif chart_type == "Sankey Diagram":
+            fig = go.Figure(data=[go.Sankey(
+                node=dict(pad=15, thickness=20, label=["A", "B", "C", "D"], color="gold"),
+                link=dict(source=[0, 1, 0], target=[2, 3, 3], value=[8, 4, 2])
+            )])
 
-    else:
-        st.info("No GPS column with space-separated coordinates found.")
+        elif chart_type == "Parcoords":
+            numeric_cols = st.multiselect("🔗 Dimensions ", df.columns.tolist(), default=df.columns[:3].tolist())
+            #df['index_code'] = df.index
+            fig = px.parallel_coordinates(df, dimensions=numeric_cols,
+                                color_continuous_scale=px.colors.diverging.Tealrose,
+                                color_continuous_midpoint=2)
 
-    st.subheader("📝 Sentiment Analysis & Word Cloud")
-    text_cols = df.select_dtypes(include='object').columns.tolist()
-    text_col = st.selectbox("Select text column", text_cols)
+        elif chart_type == "Ternary Plot":
+            ternary_cols = df.columns.tolist()
+            fig = px.scatter_ternary(dof, a="Joly", b="Coderre", c="Bergeron", hover_name="district",
+            color="winner", size="total", size_max=15,
+            color_discrete_map = {"Joly": "blue", "Bergeron": "green", "Coderre":"red"} )
 
-    if "analyze_clicked" not in st.session_state:
-        st.session_state.analyze_clicked = False
+        elif chart_type == "Violin Plot":
+            y_col = st.selectbox("Y Axis", df.columns.tolist())
+            x_col = st.selectbox("X Axis", df.columns.tolist())
+            col_col = st.selectbox("Color Axis", df.columns.tolist())
+            fig = px.violin(df, y=y_col,x=x_col, color=col_col, box=True, # draw box plot inside the violin
+                    points='all', # can be 'outliers', or False
+                    hover_data=df.columns
+                )
 
-    if st.button("🔍 Analyze Text Column"):
-        st.session_state.analyze_clicked = True
 
-    if st.session_state.analyze_clicked:
-        texts = df[text_col].dropna().astype(str).tolist()
+        elif chart_type == "Contour Plot (2D)":
+            x_col = st.selectbox("X Axis", df.columns.tolist())
+            y_col = st.selectbox("Y Axis", df.columns.tolist())
+            fig = px.density_contour(df, x=x_col, y=y_col)
 
-        wc = WordCloud(width=800, height=400, background_color='white').generate(' '.join(texts))
-        st.image(wc.to_array(), caption="Word Cloud", use_container_width=True)
+        elif chart_type == "Clustered Heatmap":
+            data = {
+            'age': [25, 32, 47, 51, 62],
+                'salary': [50000, 60000, 80000, 85000, 120000],
+                'experience': [1, 4, 10, 12, 20]
+            }
 
-        if openai.api_key:
-            prompt = f"Analyze the overall sentiment of the following responses:\n{texts[:1000]}\n\nGive a summary of tone, main themes, and emotion."
-            response = openai.ChatCompletion.create(
-                model="gpt-4",
-                messages=[{"role": "user", "content": prompt}],
-                temperature=0.5
-            )
-            st.markdown("### 🧠 Sentiment Summary")
-            st.markdown(response.choices[0].message.content)
+            df = pd.DataFrame(data)
+            # Correlation matrix
+            corr = df.corr()
+            #print(corr)
+            fig = px.imshow(corr, text_auto=True, color_continuous_scale='Viridis')
 
-    if st.button("🔄 Reset Analysis"):
-        st.session_state.analyze_clicked = False
+        elif chart_type == "Animated Time Series":
+            time_col = st.selectbox("⏱ Time Column", df.select_dtypes(include='object').columns.tolist())
+            x = st.selectbox("X Axis", df.columns.tolist())
+            y = st.selectbox("Y Axis", df.columns.tolist())
+            size = st.selectbox("Size", df.columns.tolist())
+            color = st.selectbox("Color", df.select_dtypes(exclude='number').columns.tolist())
+            fig = px.scatter(df, x=x, y=y, animation_frame=time_col, size=size, color=color, size_max=60)
+
+        elif chart_type == "Radar / Polar Chart":
+            radar_cols = st.multiselect("Select 3 numeric fields for radar", df.columns.tolist(), default=df.columns.tolist()[:3])
+            row_idx = st.number_input("Row to visualize", min_value=0, max_value=len(df)-1, step=1)
+            values = df.iloc[row_idx][radar_cols].tolist()
+            fig = go.Figure(data=go.Scatterpolar(r=values, theta=radar_cols, fill='toself'))
+
+        # Show chart
+        st.plotly_chart(fig, use_container_width=True)
+
+    #-----end of Advanced Charts -------
+    with st.expander("📝 Sentiment Analysis & Word Cloud"):
+        text_cols = df.select_dtypes(include='object').columns.tolist()
+        text_col = st.selectbox("Select text column", text_cols)
+
+        if "analyze_clicked" not in st.session_state:
+            st.session_state.analyze_clicked = False
+
+        if st.button("🔍 Analyze Text Column"):
+            st.session_state.analyze_clicked = True
+
+        if st.session_state.analyze_clicked:
+            texts = df[text_col].dropna().astype(str).tolist()
+
+            wc = WordCloud(width=800, height=400, background_color='white').generate(' '.join(texts))
+            st.image(wc.to_array(), caption="Word Cloud", use_container_width=True)
+
+            if openai.api_key:
+                prompt = f"Analyze the overall sentiment of the following responses:\n{texts[:1000]}\n\nGive a summary of tone, main themes, and emotion."
+                response = openai.ChatCompletion.create(
+                    model="gpt-4",
+                    messages=[{"role": "user", "content": prompt}],
+                    temperature=0.5
+                )
+                st.markdown("### 🧠 Sentiment Summary")
+                st.markdown(response.choices[0].message.content)
+
+        if st.button("🔄 Reset Analysis"):
+            st.session_state.analyze_clicked = False
 
