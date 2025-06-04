@@ -35,8 +35,7 @@ st.sidebar.header("📥 Data Source")
 data_source = st.sidebar.selectbox("Select Data Source", ["Excel", "CSV","KoboToolbox", "ODK", "DHIS2"])
 
 import plotly.express as px
-#dof = px.data.tips()
-# dof = px.data.tips()
+dof = px.data.tips()
 # st.dataframe(dof.head())
 
 
@@ -549,6 +548,9 @@ if "df" in st.session_state:
             fig.update_traces(root_color="gold")
 
         elif chart_type == "Sankey Diagram":
+            st.write('''
+                The chart below shows some numbers I picked for you.
+            ''')
             fig = go.Figure(data=[go.Sankey(
                 node=dict(pad=15, thickness=20, label=["A", "B", "C", "D"], color="gold"),
                 link=dict(source=[0, 1, 0], target=[2, 3, 3], value=[8, 4, 2])
@@ -562,6 +564,9 @@ if "df" in st.session_state:
                                 color_continuous_midpoint=2)
 
         elif chart_type == "Ternary Plot":
+            st.write('''
+                The chart below shows some numbers I picked for you.
+            ''')
             ternary_cols = df.columns.tolist()
             fig = px.scatter_ternary(dof, a="Joly", b="Coderre", c="Bergeron", hover_name="district",
             color="winner", size="total", size_max=15,
@@ -583,6 +588,9 @@ if "df" in st.session_state:
             fig = px.density_contour(df, x=x_col, y=y_col)
 
         elif chart_type == "Clustered Heatmap":
+            st.write('''
+                The chart below shows some numbers I picked for you.
+            ''')
             data = {
             'age': [25, 32, 47, 51, 62],
                 'salary': [50000, 60000, 80000, 85000, 120000],
