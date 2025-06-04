@@ -567,10 +567,10 @@ if "df" in st.session_state:
             st.write('''
                 The chart below shows some numbers I picked for you.
             ''')
-            ternary_cols = df.columns.tolist()
+            dof = px.data.election()
             fig = px.scatter_ternary(dof, a="Joly", b="Coderre", c="Bergeron", hover_name="district",
-            color="winner", size="total", size_max=15,
-            color_discrete_map = {"Joly": "blue", "Bergeron": "green", "Coderre":"red"} )
+                color="winner", size="total", size_max=15,
+                color_discrete_map = {"Joly": "blue", "Bergeron": "green", "Coderre":"red"} )
 
         elif chart_type == "Violin Plot":
             y_col = st.selectbox("Y Axis", df.columns.tolist())
